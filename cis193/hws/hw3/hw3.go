@@ -91,8 +91,12 @@ func (ps PersonSlice) Swap(i, j int) {
 // IsPalindrome checks if the string is a palindrome.
 // A palindrome is a string that reads the same backward as forward.
 func IsPalindrome(s sort.Interface) bool {
-	// TODO
-	return false
+	for i := 0; i < s.Len(); i++ {
+		if s.Less(i, s.Len()-i+1) {
+			return false
+		}
+	}
+	return true
 }
 
 // Problem 3: Functional Programming
@@ -108,6 +112,9 @@ func IsPalindrome(s sort.Interface) bool {
 // Note the argument signature of f - func(int, int) int.
 // This means f is a function which has 2 int arguments and returns an int.
 func Fold(s []int, v int, f func(int, int) int) int {
-	// TODO
-	return 0
+	var val int = v
+	for _, x := range s {
+		val = f(val, x)
+	}
+	return val
 }
