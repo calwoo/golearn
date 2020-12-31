@@ -3,24 +3,29 @@ package main
 import "fmt"
 
 func main() {
-	// Feel free to use the main function for testing your functions
-	hello := make(chan string, 5)
-	hello <- "Hello world"
-	hello <- "ÐŸÑ€Ð¸Ð²ÐµÑ‚ Ð¼Ð¸Ñ€"
-	hello <- "ÐŸÑ€Ð¸Ð²Ñ–Ñ‚ Ð¡Ð²Ñ–Ñ‚"
-	hello <- "Witaj Å›wiecie"
-	close(hello)
-	fmt.Println(<-hello)
-	for greeting := range hello {
-		fmt.Println(greeting)
+	t := make(chan int, 5)
+	t <- 2
+	t <- 3
+	t <- -1
+	t <- 4
+	d := Filter(t, func(n int) bool { return n > 0 })
+	for v := range d {
+		fmt.Println(v)
 	}
 }
 
 // Filter copies values from the input channel into an output channel that match the filter function p
 // The function p determines whether an int from the input channel c is sent on the output channel
 func Filter(c <-chan int, p func(int) bool) <-chan int {
-	// TODO
-	return nil
+	chanLen := len(c)
+	d := make(chan int, chanLen)
+	for i := 0; i < chanLen; i++ {
+		v := <-c
+		if p(v) {
+			d <- v
+		}
+	}
+	return d
 }
 
 // Result is a type representing a single result with its index from a slice
