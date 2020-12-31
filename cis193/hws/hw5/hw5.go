@@ -49,8 +49,28 @@ type Result struct {
 // execute, and all results should be sent on the output channel. Once all tasks
 // have been completed, close the channel.
 func ConcurrentRetry(tasks []func() (string, error), concurrent int, retry int) <-chan Result {
-	// TODO
-	return nil
+	runningTasks := make(chan int, concurrent)
+	r := make(chan string, concurrent)
+	rs := make(chan Result, concurrent)
+	for i, task := range tasks {
+		runningTasks <- i
+		go func() {
+			for i := 0; i < retry; i++ {
+				s, err := task()
+				if err == nil {
+					r <- s
+				}
+			}
+		}()
+	}
+
+	ind := 0
+	for s := range r {
+		rs <- Result{index: ind, result: s}
+		ind++
+	}
+
+	return rs
 }
 
 // Task is an interface for types that process integers
