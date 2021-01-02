@@ -6,9 +6,18 @@ JSON_SYNTAX = ["(", ":", ")", ",", "{", "}", "[", "]"]
 JSON_QUOTE = '"'
 JSON_DIGITS = [str(d) for d in range(0, 10)] + ["-", "e", "."]
 
+JSON_LEFTBRACKET = "["
+JSON_LEFTBRACE = "{"
+JSON_RIGHTBRACKET = "]"
+JSON_RIGHTBRACE = "}"
+JSON_COMMA = ","
+JSON_COLON = ":"
+
 
 def from_string(s: str) -> dict:
-    pass
+    tokens = lex(s)
+    json_obj, _ = parse(tokens)
+    return json_obj
 
 # lexer
 def lex(s: str) -> List[str]:
@@ -90,12 +99,73 @@ def lex_null(s: str) -> Tuple[Optional[bool], str]:
     return None, s
 
 # parser
+def parse_array(tokens):
+    json_array = []
 
+    t = tokens[0]
+    if t == JSON_RIGHTBRACKET:
+        return [], tokens[1:]
 
+    # otherwise, loop through and parse inner list
+    while len(tokens) > 0:
+        json, tokens = parse(tokens)
+        json_array.append(json)
 
+        t = tokens[0]
+        if t == JSON_RIGHTBRACKET:
+            return json_array, tokens[1:]
+        elif t != JSON_COMMA:
+            raise Exception("Expected comma after object in array")
+        else:
+            tokens = tokens[1:]
+    
+    raise Exception("Expected end-of-array bracket")
 
+def parse_object(tokens):
+    json_object = {}
 
+    t = tokens[0]
+    if t == JSON_RIGHTBRACE:
+        return {}, tokens[1:]
+    
+    # otherwise, loop through and parse inner list
+    while len(tokens) > 0:
+        json_key = tokens[0]
+        if type(json_key) is str:
+            tokens = tokens[1:]
+        else:
+            raise Exception(f"Expected string for key, got: {json_key}")
+
+        # check for colon
+        if tokens[0] != JSON_COLON:
+            raise Exception(f"Expected colon after key in object, got: {tokens[0]}")
+
+        json_value, tokens = parse(tokens[1:])
+        json_object[json_key] = json_value
+
+        t = tokens[0]
+        if t == JSON_RIGHTBRACE:
+            return json_object, tokens[1:]
+        elif t != JSON_COMMA:
+            raise Exception("Expected comma after pair in object")
+        else:
+            tokens = tokens[1:]
+    
+    raise Exception("Expected end-of-object braces")
+
+def parse(tokens):
+    t = tokens[0]
+
+    if t == JSON_LEFTBRACKET:
+        return parse_array(tokens[1:])
+    elif t == JSON_LEFTBRACE:
+        return parse_object(tokens[1:])
+    else:
+        return t, tokens[1:]
+    
 
 if __name__ == "__main__":
     s = '{"foo": [1, 2, {"bar": 2}]}'
-    print(lex(s))
+    json_obj = from_string(s)
+    print(json_obj)
+    print(type(json_obj))
